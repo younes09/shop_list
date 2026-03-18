@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ShoppingCart, Wallet, History as HistoryIcon, BarChart2, Plus, Trash2, CheckCircle, Circle, AlertTriangle, X } from 'lucide-react';
+import { ShoppingCart, Wallet, History as HistoryIcon, BarChart2, Plus, Trash2, CheckCircle, Circle, AlertTriangle, X, Eye, EyeOff } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 // --- DATA & CONSTANTS ---
@@ -121,7 +121,7 @@ const ShoppingListItem = ({ item, toggleItem, deleteItem, updateItem, categories
           <Trash2 size={24} strokeWidth={2.5} />
         </div>
         <div 
-          className={`relative z-10 flex items-center p-4 transition-transform duration-200 ease-out cursor-pointer ${item.checked ? 'bg-zinc-950/90' : 'bg-zinc-900'} ${offsetX === 0 && 'hover:bg-zinc-800/50'}`}
+          className={`relative z-10 flex items-center p-4 transition-transform duration-200 ease-out cursor-pointer ${item.checked ? 'bg-zinc-950' : 'bg-zinc-900'} ${offsetX === 0 && 'hover:bg-zinc-800'}`}
           style={{ transform: `translateX(${offsetX}px)` }}
           onTouchStart={e => handlePointerDown(e.touches[0].clientX)}
           onTouchMove={e => handlePointerMove(e.touches[0].clientX)}
@@ -142,7 +142,6 @@ const ShoppingListItem = ({ item, toggleItem, deleteItem, updateItem, categories
           </div>
           <div className="flex items-center gap-4 pl-4 border-l border-zinc-800 ml-2">
             <span className={`font-black tracking-tighter ${item.checked ? 'text-zinc-600' : 'text-zinc-50'}`}>{((item.price || 0) * item.quantity).toFixed(2)}€</span>
-            <button onClick={() => triggerDelete(false)} className="text-zinc-600 hover:text-red-400 p-2 transition-colors"><Trash2 size={18} strokeWidth={2.5} /></button>
           </div>
         </div>
       </div>
@@ -156,6 +155,7 @@ export default function ShoppingApp() {
   const [items, setItems] = useState(DEMO_ITEMS);
   const [budget, setBudget] = useState(100);
   const [history, setHistory] = useState(DEMO_HISTORY);
+  const [showCompleted, setShowCompleted] = useState(false);
 
   // States for adding item
   const [newItemName, setNewItemName] = useState('');
@@ -226,8 +226,10 @@ export default function ShoppingApp() {
       if (!groups[it.category]) groups[it.category] = { category: CATEGORIES[it.category] || CATEGORIES.autre, items: [] };
       groups[it.category].items.push(it);
     });
-    return Object.values(groups).sort((a, b) => b.items.length - a.items.length);
-  }, [items]);
+    return Object.values(groups)
+      .filter(group => showCompleted || !group.items.every(it => it.checked))
+      .sort((a, b) => b.items.length - a.items.length);
+  }, [items, showCompleted]);
 
   const groupedHistory = useMemo(() => {
     const g = {};
@@ -253,9 +255,13 @@ export default function ShoppingApp() {
           <h2 className="font-bold text-xl text-zinc-50 tracking-tight uppercase">Ma Liste</h2>
           <p className="text-sm text-zinc-400 mb-0 font-medium">{items.length} ITEM(S)</p>
         </div>
-        <div className="bg-lime-400/10 text-lime-400 px-3 py-1 rounded-sm text-xs font-bold uppercase tracking-widest border border-lime-400/20">
-          En cours
-        </div>
+        <button 
+          onClick={() => setShowCompleted(!showCompleted)}
+          className="flex items-center gap-2 bg-zinc-950 hover:bg-zinc-800 text-zinc-400 px-3 py-1.5 rounded-none text-[9px] font-bold uppercase tracking-widest border border-zinc-800 transition-colors"
+        >
+          {showCompleted ? <EyeOff size={14} /> : <Eye size={14} />}
+          {showCompleted ? 'Masquer' : 'Voir terminés'}
+        </button>
       </div>
 
       {/* Add Form */}
